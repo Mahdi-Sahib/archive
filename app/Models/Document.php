@@ -16,8 +16,9 @@ class Document extends Model
     protected $fillable = [
         'direction',
         'organization_id',
+        'document_number',
         'category_id',
-        'documents_title',
+        'document_title',
         'issue_date',
         'files',
         'expiry_date',
@@ -29,6 +30,12 @@ class Document extends Model
     protected $casts = [
         'files' => 'array',
     ];
+
+    public function documents(): BelongsTo
+    {
+        return $this->belongsTo(Document::class);
+    }
+
 
     public function category(): BelongsTo
     {
@@ -44,5 +51,7 @@ class Document extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+
 
 }

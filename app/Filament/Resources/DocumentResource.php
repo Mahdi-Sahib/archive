@@ -13,12 +13,17 @@ use App\Models\Organization;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -52,7 +57,10 @@ class DocumentResource extends Resource
                     ->label('Category')->translateLabel()
                     ->options(Category::query()->pluck('category_name','id'))
                     ->reactive(),
-                TextInput::make('documents_title')->required()->translateLabel(),
+
+                TextInput::make('document_number')->required()->translateLabel(),
+
+                TextInput::make('document_title')->required()->translateLabel(),
                 DatePicker::make('issue_date')->translateLabel(),
                 DatePicker::make('expiry_date')->translateLabel(),
                 Select::make('confidentiality_level')
@@ -82,12 +90,10 @@ class DocumentResource extends Resource
                     ->openable()
                     ->downloadable()
                     ->maxSize(10000)
-                    ->preserveFilenames()
+                    // TODO : Add the ability to customize the file name
+                    // TODO : fix file not being visible in the browser
                     ->directory('documents')
                     ->acceptedFileTypes(['application/pdf'])
-                    ->getUploadedFileNameForStorageUsing(
-                        fn (TemporaryUploadedFile $file): string => 'custom-prefix-' . $file->getClientOriginalName()
-                    )
                     ->columnSpanFull(),
             ]);
     }
@@ -96,49 +102,90 @@ class DocumentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('documents_title')
+                TextColumn::make('documents_title')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('direction'),
-                Tables\Columns\TextColumn::make('issue_date')
+
+                // TODO : make the direction enum clickable
+                TextColumn::make('direction'),
+
+                TextColumn::make('document_number')
+                    ->label('Number')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('category.category_name')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('organization.organization_name')
+                    ->sortable(),
+
+                TextColumn::make('issue_date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('expiry_date')
+                TextColumn::make('expiry_date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('confidentiality_level'),
-                Tables\Columns\TextColumn::make('category.id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('organization.id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('deleted_at')
+                TextColumn::make('status'),
+                TextColumn::make('confidentiality_level'),
+
+                // TODO : fix the user relation
+                TextColumn::make('user.user_id'),
+
+                TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from')
+                            ->columnSpan(6),
+                        DatePicker::make('created_until')
+                            ->columnSpan(6),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->columns(12),
+            ])
+            ->filtersFormWidth('md')
+
+
+
+
+
+            ->defaultSort('created_at', 'desc')
+            ->headerActions([
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ]);
     }

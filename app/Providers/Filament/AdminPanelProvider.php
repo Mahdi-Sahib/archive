@@ -27,6 +27,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->brandName('BCC AMS')
+            ->brandLogo(asset('images/bcc-logo.png'))
+            ->brandLogoHeight('3rem')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -51,6 +54,10 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->renderHook(
+                'panels::body.end', // This line specifies where to render the footer
+                fn () => view('customFooter') // This is the view that will be rendered
+            )
             ->authMiddleware([
                 Authenticate::class,
             ]);

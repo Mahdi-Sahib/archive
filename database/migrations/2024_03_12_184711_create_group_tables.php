@@ -47,7 +47,8 @@ return new class extends Migration
 
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->string('documents_title');
+            $table->string('document_title');
+            $table->unsignedInteger('document_number');
             $table->enum('direction',['Inbound', 'Outbound','Internal','Undefined']);
             $table->date('issue_date')->nullable();
             $table->date('expiry_date')->nullable();
