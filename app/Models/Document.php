@@ -24,7 +24,7 @@ class Document extends Model
         'expiry_date',
         'confidentiality_level',
         'document_status',
-        'user_id',
+        'created_by',
     ];
 
     protected $casts = [
@@ -35,7 +35,6 @@ class Document extends Model
     {
         return $this->belongsTo(Document::class);
     }
-
 
     public function category(): BelongsTo
     {
@@ -49,9 +48,7 @@ class Document extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
-
-
 
 }

@@ -60,7 +60,9 @@ class DocumentResource extends Resource
 
                 Section::make()->schema([
                     Select::make('organization_id')
-                        ->label('Organization')->translateLabel()
+                        ->label('Organization')
+                        ->translateLabel()
+                        ->required()
                         ->options(Organization::query()->pluck('organization_name','id'))
                         ->reactive(),
                     TextInput::make('document_title')->required()->translateLabel(),
@@ -102,10 +104,14 @@ class DocumentResource extends Resource
                     ->downloadable()
                     ->maxSize(10000)
                     // TODO : Add the ability to customize the file name
-                    // TODO : fix file not being visible in the browser
                     ->directory('documents')
                     ->acceptedFileTypes(['application/pdf'])
                     ->columnSpanFull(),
+
+                Forms\Components\Hidden::make('created_by')
+                    ->default(auth()->id()),
+                Forms\Components\Hidden::make('updated_by')
+                    ->default(auth()->id()),
             ]);
     }
 
@@ -115,10 +121,7 @@ class DocumentResource extends Resource
             ->columns([
                 TextColumn::make('document_title')
                     ->searchable(),
-
-                // TODO : make the direction enum clickable
                 TextColumn::make('direction'),
-
                 TextColumn::make('document_number')
                     ->label('Number')
                     ->numeric()
@@ -128,7 +131,6 @@ class DocumentResource extends Resource
                     ->sortable(),
                 TextColumn::make('organization.organization_name')
                     ->sortable(),
-
                 TextColumn::make('issue_date')
                     ->date()
                     ->sortable(),
@@ -137,10 +139,8 @@ class DocumentResource extends Resource
                     ->sortable(),
                 TextColumn::make('status'),
                 TextColumn::make('confidentiality_level'),
-
-                // TODO : fix the user relation
-                TextColumn::make('user.user_id'),
-
+                TextColumn::make('user.name')
+                    ->label('User'),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
