@@ -40,31 +40,41 @@ class DocumentResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('direction')
-                    ->translateLabel()
-                    ->options([
-                        'Inbound' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::INBOUND->value) : 'Inbound',
-                        'Outbound' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::OUTBOUND->value) : 'Outbound',
-                        'Internal' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::INTERNAL->value) : 'Internal',
-                        'Undefined' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::UNDEFINED->value) : 'Undefined',
-                    ])
-                    ->required(),
-                Select::make('organization_id')
-                    ->label('Organization')->translateLabel()
-                    ->options(Organization::query()->pluck('organization_name','id'))
-                    ->reactive(),
-                Select::make('category_id')
-                    ->label('Category')->translateLabel()
-                    ->options(Category::query()->pluck('category_name','id'))
-                    ->reactive(),
+                Section::make()->schema([
+                    Select::make('category_id')
+                        ->label('Category')->translateLabel()
+                        ->options(Category::query()->pluck('category_name','id'))
+                        ->reactive(),
+                    Select::make('direction')
+                        ->translateLabel()
+                        ->options([
+                            'Inbound' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::INBOUND->value) : 'Inbound',
+                            'Outbound' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::OUTBOUND->value) : 'Outbound',
+                            'Internal' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::INTERNAL->value) : 'Internal',
+                            'Undefined' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DirectionEnum.' . DirectionEnum::UNDEFINED->value) : 'Undefined',
+                        ])
+                        ->required(),
+                    TextInput::make('document_number')->required()->translateLabel(),
+                        ])  ->columns(3),
 
-                TextInput::make('document_number')->required()->translateLabel(),
 
-                TextInput::make('document_title')->required()->translateLabel(),
-                DatePicker::make('issue_date')->translateLabel(),
-                DatePicker::make('expiry_date')->translateLabel(),
+                Section::make()->schema([
+                    Select::make('organization_id')
+                        ->label('Organization')->translateLabel()
+                        ->options(Organization::query()->pluck('organization_name','id'))
+                        ->reactive(),
+                    TextInput::make('document_title')->required()->translateLabel(),
+                ])->columns(2),
+
+                Section::make()->schema([
+                    DatePicker::make('issue_date')->translateLabel(),
+                    DatePicker::make('expiry_date')->translateLabel(),
+                ])->columns(2),
+
+                Section::make()->schema([
                 Select::make('confidentiality_level')
                     ->translateLabel()
+                    ->required()
                     ->options([
                         'Public' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DocumentConfidentialityLevelEnum.' . DocumentConfidentialityLevelEnum::PUBLIC->value) : 'Public',
                         'Private' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DocumentConfidentialityLevelEnum.' . DocumentConfidentialityLevelEnum::PRIVATE->value) : 'Private',
@@ -81,6 +91,7 @@ class DocumentResource extends Resource
                         'Archived' => App::getLocale() != 'en' ? trans('documents.document.ENUMS.DocumentStatusEnum.' . DocumentStatusEnum::ARCHIVED->value) : 'Archived',
                     ])
                     ->required(),
+                ])->columns(2),
                 TextInput::make('notes')->required()->columnSpanFull()->translateLabel(),
 
                 FileUpload::make('files')
@@ -102,7 +113,7 @@ class DocumentResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('documents_title')
+                TextColumn::make('document_title')
                     ->searchable(),
 
                 // TODO : make the direction enum clickable
