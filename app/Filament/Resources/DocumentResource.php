@@ -43,6 +43,7 @@ class DocumentResource extends Resource
                 Section::make()->schema([
                     Select::make('category_id')
                         ->label('Category')->translateLabel()
+                        ->required()
                         ->options(Category::query()->pluck('category_name','id'))
                         ->reactive(),
                     Select::make('direction')
